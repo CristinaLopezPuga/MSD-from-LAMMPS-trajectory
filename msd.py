@@ -25,7 +25,6 @@ def parse_args():
 
 # Constants
 #To-do change time constants to user defined variables
-THRESHOLD = 25
 TIME_STEP = 100
 TIME_CONVERSION = 0.00025
 
@@ -33,14 +32,13 @@ TIME_CONVERSION = 0.00025
 def get_msd(file):
     path = read(file,format='lammps-dump-text',index=':')
     # Lattice constants
-    LATTICE_A = path[0].cell[0][0] 
-    LATTICE_B = path[0].cell[1][1]
-    LATTICE_C = path[0].cell[2][2]
+    a = path[0].cell[0][0] 
+    b = path[0].cell[1][1]
+    c = path[0].cell[2][2]
     # Initialize arrays
     time_list = []
     initial_positions = []
     final_positions = []
-    displacement = []
     msd_list = []
     average_msd_list  = []
     # Loop over each pair of consecutive paths
@@ -48,7 +46,12 @@ def get_msd(file):
         # Calculate time for each iteration
         time = t * TIME_STEP * TIME_CONVERSION
         time_list.append(time)
-        for i in range(len(path)-t):
+
+        # Calculate interval size as a function of t
+        base_interval_size = 100  # Base value
+        interval_size = max(1, base_interval_size - 0.1*t)  # Decrease interval size as t increases
+        
+        for i in range(0, len(path)-t, int(interval_size)):
             # Extract and organize lithium positions for the current and previous paths
             initial_position = np.array([path[i][n].position for n, element in enumerate(path[i].symbols) if element == 'H']) 
             final_position = np.array([path[i + t][n].position for n, element in enumerate(path[i + t].symbols) if element == 'H']) 
@@ -57,21 +60,19 @@ def get_msd(file):
 
             # Displacement vectors
             r = np.abs(initial_position - final_position)
-            displacement.append(r)
-    
             # Boundary conditions
-            condition_1 = r[:, 0] > THRESHOLD
-            condition_2 = r[:, 1] > THRESHOLD
-            condition_3 = r[:, 2] > THRESHOLD
-            condition_4 = r[:, 0] < -THRESHOLD 
-            condition_5 = r[:, 1] < -THRESHOLD
-            condition_6 = r[:, 2] < -THRESHOLD  
-            r[condition_1, 0] -= LATTICE_A
-            r[condition_2, 1] -= LATTICE_B
-            r[condition_3, 2] -= LATTICE_C
-            r[condition_4, 0] += LATTICE_A
-            r[condition_5, 1] += LATTICE_B
-            r[condition_6, 2] += LATTICE_C
+            condition_1 = r[:, 0] > a/2
+            condition_2 = r[:, 1] > b/2
+            condition_3 = r[:, 2] > c/2
+            condition_4 = r[:, 0] < -a/2 
+            condition_5 = r[:, 1] < -b/2
+            condition_6 = r[:, 2] < -c/2  
+            r[condition_1, 0] -= a
+            r[condition_2, 1] -= b
+            r[condition_3, 2] -= c
+            r[condition_4, 0] += a
+            r[condition_5, 1] += b
+            r[condition_6, 2] += c
             r2 = np.square(r) # (x(t)- x(t0))2 + (y(t)- y(t0))2 + (z(t)- z(t0))2
             msd = np.mean(r2, axis=0).sum()
             msd_list.append(msd)
