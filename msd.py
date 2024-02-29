@@ -6,7 +6,6 @@ from ase.io import read,write
 import sys
 import argparse
 
-print("hello")
 
 def parse_args(): 
     parser = argparse.ArgumentParser(
