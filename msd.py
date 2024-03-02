@@ -5,7 +5,7 @@ import os
 from ase.io import read,write
 import sys
 import argparse
-
+import csv
 
 def parse_args(): 
     parser = argparse.ArgumentParser(
@@ -48,7 +48,7 @@ def get_msd(file):
         time_list.append(time)
 
         # Calculate interval size as a function of t
-        base_interval_size = 100  # Base value
+        base_interval_size = 0.1 * len(path)  # Base value
         interval_size = max(1, base_interval_size - 0.1*t)  # Decrease interval size as t increases
         
         for i in range(0, len(path)-t, int(interval_size)):
