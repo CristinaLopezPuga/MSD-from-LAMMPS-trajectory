@@ -28,7 +28,7 @@ def parse_args():
     return parser.parse_args()
 
 
-def calculate_displacement_vectors(path, a, b, c):
+def calculate_displacement_vectors(path):
     displacement_vectors = []
     time_list = []
 
@@ -47,21 +47,6 @@ def calculate_displacement_vectors(path, a, b, c):
 
             # Displacement vectors
             r = np.abs(initial_position - final_position)
-
-            # Boundary conditions
-            condition_1 = r[:, 0] > a / 2
-            condition_2 = r[:, 1] > b / 2
-            condition_3 = r[:, 2] > c / 2
-            condition_4 = r[:, 0] < -a / 2
-            condition_5 = r[:, 1] < -b / 2
-            condition_6 = r[:, 2] < -c / 2
-
-            r[condition_1, 0] -= a
-            r[condition_2, 1] -= b
-            r[condition_3, 2] -= c
-            r[condition_4, 0] += a
-            r[condition_5, 1] += b
-            r[condition_6, 2] += c
 
             displacement_vectors_t.append(r)
 
@@ -109,11 +94,8 @@ def main():
     output_file = args.output_file
 
     path = read_lammps_dump(input_file)
-    a = path[0].cell[0][0]
-    b = path[0].cell[1][1]
-    c = path[0].cell[2][2]
 
-    time_list, displacement_vectors = calculate_displacement_vectors(path, a, b, c)
+    time_list, displacement_vectors = calculate_displacement_vectors(path)
     average_msd_list = calculate_msd(displacement_vectors)
 
     write_log(time_list, average_msd_list, output_file)
